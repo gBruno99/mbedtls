@@ -40,6 +40,13 @@ set(src_crypto
     ecp.c
     ecp_curves.c
     ecp_curves_new.c
+    ed25519.c
+    ed25519/fe.c
+    ed25519/ge.c
+    ed25519/keypair.c
+    ed25519/sc.c
+    ed25519/sign.c
+    ed25519/verify.c
     entropy.c
     entropy_poll.c
     error.c
@@ -95,6 +102,7 @@ set(src_crypto
 )
 
 set(src_x509
+    dice_tcbinfo.c
     pkcs7.c
     x509.c
     x509_create.c

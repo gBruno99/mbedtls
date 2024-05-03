@@ -17,6 +17,8 @@
 #include "mbedtls/x509_crl.h"
 #include "mbedtls/bignum.h"
 
+#include "mbedtls/dice_tcbinfo.h"
+
 /**
  * \addtogroup x509_module
  * \{
@@ -83,6 +85,8 @@ typedef struct mbedtls_x509_crt {
     mbedtls_md_type_t MBEDTLS_PRIVATE(sig_md);           /**< Internal representation of the MD algorithm of the signature algorithm, e.g. MBEDTLS_MD_SHA256 */
     mbedtls_pk_type_t MBEDTLS_PRIVATE(sig_pk);           /**< Internal representation of the Public Key algorithm of the signature algorithm, e.g. MBEDTLS_PK_RSA */
     void *MBEDTLS_PRIVATE(sig_opts);             /**< Signature options to be passed to mbedtls_pk_verify_ext(), e.g. for RSASSA-PSS */
+
+    dice_tcbInfo dice_tcb_info;             /**< The parsed X.509 extension DiceTcbInfo from TCG. */
 
     /** Next certificate in the linked list that constitutes the CA chain.
      * \p NULL indicates the end of the list.
@@ -1150,6 +1154,20 @@ int mbedtls_x509write_crt_set_ext_key_usage(mbedtls_x509write_cert *ctx,
  */
 int mbedtls_x509write_crt_set_ns_cert_type(mbedtls_x509write_cert *ctx,
                                            unsigned char ns_cert_type);
+
+/**
+ * \brief           Set the TCG DiceTcbInfo extension
+ *
+ * \param ctx           CRT context to use
+ * \param info_struct   dice_tcbInfo struct to set
+ * \param dim           ???
+ * \param buf           ???
+ * \param buf_size      ???
+ *
+ * \return          0 if successful, or MBEDTLS_ERR_X509_ALLOC_FAILED
+ */
+int mbedtls_x509write_crt_set_dice_tcbInfo(mbedtls_x509write_cert *ctx,
+                                           dice_tcbInfo info_struct, int dim, unsigned char buf[], size_t buf_size);
 
 /**
  * \brief           Free the contents of a CRT write context

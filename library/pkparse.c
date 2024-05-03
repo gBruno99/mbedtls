@@ -535,6 +535,7 @@ int mbedtls_pk_parse_subpubkey(unsigned char **p, const unsigned char *end,
         return ret;
     }
 
+    // added to x509custom
     if ((ret = mbedtls_asn1_get_bitstring_null(p, end, &len)) != 0) {
         return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_PK_INVALID_PUBKEY, ret);
     }
@@ -552,6 +553,13 @@ int mbedtls_pk_parse_subpubkey(unsigned char **p, const unsigned char *end,
         return ret;
     }
 
+    if(pk_alg == MBEDTLS_PK_ED25519) {
+        mbedtls_asn1_bitstring bs = { 0, 0, NULL };
+        if ((ret = mbedtls_asn1_get_bitstring(p, end, &bs)) != 0) {
+            return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_PK_INVALID_PUBKEY, ret);
+        }
+        ret = pk_set_ed25519pubkey(&bs.p, mbedtls_pk_ed25519(*pk));
+    } else
 #if defined(MBEDTLS_RSA_C)
     if (pk_alg == MBEDTLS_PK_RSA) {
         ret = mbedtls_rsa_parse_pubkey(mbedtls_pk_rsa(*pk), *p, (size_t) (end - *p));
@@ -1277,6 +1285,49 @@ int mbedtls_pk_parse_public_key(mbedtls_pk_context *ctx,
     p = (unsigned char *) key;
 
     ret = mbedtls_pk_parse_subpubkey(&p, p + keylen, ctx);
+
+    return ret;
+}
+
+/*
+ * Parse an Ed25519 public or private key
+ * In x509custom was mbedtls_pk_parse_public_key
+ */
+int mbedtls_pk_parse_ed25519_key(mbedtls_pk_context *ctx,
+                                const unsigned char *key, size_t keylen, int type_k)
+{
+    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    unsigned char *p;
+    const mbedtls_pk_info_t *pk_info;
+
+    if (keylen == 0) {
+        return MBEDTLS_ERR_PK_KEY_INVALID_FORMAT;
+    }
+
+    if ((pk_info = mbedtls_pk_info_from_type(MBEDTLS_PK_ED25519)) == NULL) {
+        return MBEDTLS_ERR_PK_UNKNOWN_PK_ALG;
+    }
+
+    if(ctx->pk_info != NULL) {
+        if(ctx->pk_info != pk_info) {
+            return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
+        }
+    } else if ((ret = mbedtls_pk_setup(ctx, pk_info)) != 0) {
+        return ret;
+    }
+
+    p = (unsigned char *) key;
+    if (type_k == 0) {
+        ret = pk_set_ed25519pubkey(&p, mbedtls_pk_ed25519(*ctx));
+    } else {
+        ret = pk_set_ed25519privkey(&p, mbedtls_pk_ed25519(*ctx));
+    }
+
+    if (ret == 0) {
+        return ret;
+    }
+
+    mbedtls_pk_free(ctx);
 
     return ret;
 }

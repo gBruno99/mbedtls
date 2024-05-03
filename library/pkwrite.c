@@ -429,6 +429,9 @@ int mbedtls_pk_write_pubkey(unsigned char **p, unsigned char *start,
         MBEDTLS_ASN1_CHK_ADD(len, pk_write_opaque_pubkey(p, start, key));
     } else
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
+    if (mbedtls_pk_get_type(key) == MBEDTLS_PK_ED25519) {
+        MBEDTLS_ASN1_CHK_ADD(len, pk_write_ed25519_pubkey(p, start, mbedtls_pk_ed25519(*key)));
+    } else
     return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
 
     return (int) len;
@@ -460,6 +463,7 @@ int mbedtls_pk_write_pubkey_der(const mbedtls_pk_context *key, unsigned char *bu
      *       algorithm            AlgorithmIdentifier,
      *       subjectPublicKey     BIT STRING }
      */
+    // added to x509custom (newt 4 lines), changed pk_write_ed25519_pubkey
     *--c = 0;
     len += 1;
 
@@ -468,6 +472,11 @@ int mbedtls_pk_write_pubkey_der(const mbedtls_pk_context *key, unsigned char *bu
 
     pk_type = pk_get_type_ext(key);
 
+    if(pk_type == MBEDTLS_PK_ED25519) {
+        has_par = 0;
+    }
+
+// added to x509custom
 #if defined(MBEDTLS_PK_HAVE_ECC_KEYS)
     if (pk_get_type_ext(key) == MBEDTLS_PK_ECKEY) {
         mbedtls_ecp_group_id ec_grp_id = mbedtls_pk_get_ec_group_id(key);

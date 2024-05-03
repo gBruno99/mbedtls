@@ -384,6 +384,68 @@ int mbedtls_x509write_crt_set_ns_cert_type(mbedtls_x509write_cert *ctx,
     return 0;
 }
 
+int mbedtls_x509write_crt_set_dice_tcbInfo(mbedtls_x509write_cert *ctx,
+                                           dice_tcbInfo info_struct, int dim, unsigned char buf[], size_t buf_size)
+{
+    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    unsigned char *c = buf + buf_size;
+    size_t len = 0;
+
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_bitstring(&c, buf, info_struct.flagMask, 32));
+
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_raw_buffer(&c, buf, info_struct.type, info_struct.l_ty));
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_len(&c, buf, info_struct.l_ty));
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_tag(&c, buf, MBEDTLS_ASN1_OCTET_STRING));
+
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_raw_buffer(&c, buf, info_struct.vendorInfo, info_struct.l_ven));
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_len(&c, buf, info_struct.l_ven));
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_tag(&c, buf, MBEDTLS_ASN1_OCTET_STRING));
+
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_bitstring(&c, buf, info_struct.flags, 32));
+
+    int app_len = 0;
+    MBEDTLS_ASN1_CHK_ADD(app_len, mbedtls_asn1_write_raw_buffer(&c, buf, info_struct.fwids[0].digest, 64));
+    MBEDTLS_ASN1_CHK_ADD(app_len, mbedtls_asn1_write_len(&c, buf, 64));
+    MBEDTLS_ASN1_CHK_ADD(app_len, mbedtls_asn1_write_tag(&c, buf, MBEDTLS_ASN1_OCTET_STRING));
+
+    MBEDTLS_ASN1_CHK_ADD(app_len, mbedtls_asn1_write_raw_buffer(&c, buf, (const unsigned char *)info_struct.fwids[0].OID_algo, info_struct.fwids[0].oid_len));
+    MBEDTLS_ASN1_CHK_ADD(app_len, mbedtls_asn1_write_len(&c, buf, info_struct.fwids[0].oid_len));
+    MBEDTLS_ASN1_CHK_ADD(app_len, mbedtls_asn1_write_tag(&c, buf, MBEDTLS_ASN1_OID));
+
+    MBEDTLS_ASN1_CHK_ADD(app_len, mbedtls_asn1_write_len(&c, buf, app_len));
+    MBEDTLS_ASN1_CHK_ADD(app_len, mbedtls_asn1_write_tag(&c, buf, MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE));
+
+    len = len + app_len;
+
+    /*riferimento la set_basic_connstraint di sopra*/
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_int(&c, buf, info_struct.index));
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_int(&c, buf, info_struct.layer));
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_int(&c, buf, info_struct.svn));
+
+    /*Riferimento x509write_crt.c riga 349*/
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_raw_buffer(&c, buf, info_struct.version, info_struct.l_ver));
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_len(&c, buf, info_struct.l_ver));
+
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_tag(&c, buf, MBEDTLS_ASN1_UTF8_STRING));
+
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_raw_buffer(&c, buf, info_struct.model, info_struct.l_mod));
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_len(&c, buf, info_struct.l_mod));
+
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_tag(&c, buf, MBEDTLS_ASN1_UTF8_STRING));
+
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_raw_buffer(&c, buf, info_struct.vendor, info_struct.l_ven));
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_len(&c, buf, info_struct.l_ven));
+
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_tag(&c, buf, MBEDTLS_ASN1_UTF8_STRING));
+
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_len(&c, buf, len));
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_tag(&c, buf, MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE));
+
+    return mbedtls_x509write_crt_set_extension(ctx, MBEDTLS_OID_TCG_DICE_TCBINFO,
+                                               MBEDTLS_OID_SIZE(MBEDTLS_OID_TCG_DICE_TCBINFO),
+                                               1, buf + dim - len, len);
+}
+
 static int x509_write_time(unsigned char **p, unsigned char *start,
                            const char *t, size_t size)
 {
@@ -447,6 +509,8 @@ int mbedtls_x509write_crt_der(mbedtls_x509write_cert *ctx,
         pk_alg = MBEDTLS_PK_RSA;
     } else if (mbedtls_pk_can_do(ctx->issuer_key, MBEDTLS_PK_ECDSA)) {
         pk_alg = MBEDTLS_PK_ECDSA;
+    } else if (mbedtls_pk_can_do(ctx->issuer_key, MBEDTLS_PK_ED25519)) {
+        pk_alg = MBEDTLS_PK_ED25519;
     } else {
         return MBEDTLS_ERR_X509_INVALID_ALG;
     }
@@ -592,6 +656,13 @@ int mbedtls_x509write_crt_der(mbedtls_x509write_cert *ctx,
      * Make signature
      */
 
+    if (pk_alg == MBEDTLS_PK_ED25519 && ctx->md_alg == MBEDTLS_MD_NONE) {
+        if ((ret = mbedtls_pk_sign(ctx->issuer_key, ctx->md_alg,
+                               c, len, sig, sizeof(sig), &sig_len,
+                               f_rng, p_rng)) != 0) {
+            return ret;
+        }
+    } else {
     /* Compute hash of CRT. */
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
     psa_algorithm = mbedtls_md_psa_alg_from_type(ctx->md_alg);
@@ -617,6 +688,7 @@ int mbedtls_x509write_crt_der(mbedtls_x509write_cert *ctx,
                                hash, hash_length, sig, sizeof(sig), &sig_len,
                                f_rng, p_rng)) != 0) {
         return ret;
+    }
     }
 
     /* Move CRT to the front of the buffer to have space

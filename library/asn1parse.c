@@ -348,6 +348,7 @@ int mbedtls_asn1_get_sequence_of(unsigned char **p,
         asn1_get_sequence_of_cb, &cb_ctx);
 }
 
+// used even as mbedtls_asn1_get_alg_ed25519
 int mbedtls_asn1_get_alg(unsigned char **p,
                          const unsigned char *end,
                          mbedtls_asn1_buf *alg, mbedtls_asn1_buf *params)

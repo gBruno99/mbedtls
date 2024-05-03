@@ -491,6 +491,7 @@ int mbedtls_x509_write_sig(unsigned char **p, unsigned char *start,
 
     // Write OID
     //
+    // check if even MBEDTLS_PK_ED25519
     if (pk_alg == MBEDTLS_PK_ECDSA) {
         /*
          * The AlgorithmIdentifier's parameters field must be absent for DSA/ECDSA signature

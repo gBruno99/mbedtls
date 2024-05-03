@@ -16,6 +16,8 @@
 
 #include "mbedtls/md.h"
 
+#include "mbedtls/ed25519.h"
+
 #if defined(MBEDTLS_RSA_C)
 #include "mbedtls/rsa.h"
 #endif
@@ -79,6 +81,7 @@ typedef enum {
     MBEDTLS_PK_RSA_ALT,
     MBEDTLS_PK_RSASSA_PSS,
     MBEDTLS_PK_OPAQUE,
+    MBEDTLS_PK_ED25519, // here or in mbedtls_ecp_group_id / oid_ecp_grp_algid ?
 } mbedtls_pk_type_t;
 
 /**
@@ -219,6 +222,7 @@ typedef struct mbedtls_pk_info_t mbedtls_pk_info_t;
  */
 typedef struct mbedtls_pk_context {
     const mbedtls_pk_info_t *MBEDTLS_PRIVATE(pk_info);    /**< Public key information         */
+    // was mbedtls_ed25519_context instead of void
     void *MBEDTLS_PRIVATE(pk_ctx);                        /**< Underlying public key context  */
     /* The following field is used to store the ID of a private key in the
      * following cases:
@@ -1037,6 +1041,26 @@ static inline mbedtls_rsa_context *mbedtls_pk_rsa(const mbedtls_pk_context pk)
 }
 #endif /* MBEDTLS_RSA_C */
 
+/**
+ * Quick access to an ED25519 context inside a PK context.
+ *
+ * \warning This function can only be used when the type of the context, as
+ * returned by mbedtls_pk_get_type(), is #MBEDTLS_PK_ED25519.
+ * Ensuring that is the caller's responsibility.
+ * Alternatively, you can check whether this function returns NULL.
+ *
+ * \return The internal ED25519 context held by the PK context, or NULL.
+ */
+static inline mbedtls_ed25519_context *mbedtls_pk_ed25519(const mbedtls_pk_context pk)
+{
+    switch (mbedtls_pk_get_type(&pk)) {
+        case MBEDTLS_PK_ED25519:
+            return (mbedtls_ed25519_context *) (pk).MBEDTLS_PRIVATE(pk_ctx);
+        default:
+            return NULL;
+    }
+}
+
 #if defined(MBEDTLS_ECP_C)
 /**
  * Quick access to an EC context inside a PK context.
@@ -1134,6 +1158,36 @@ int mbedtls_pk_parse_key(mbedtls_pk_context *ctx,
  */
 int mbedtls_pk_parse_public_key(mbedtls_pk_context *ctx,
                                 const unsigned char *key, size_t keylen);
+
+/** \ingroup pk_module */
+/**
+ * \brief           Parse an Ed25519 key in DER format
+ *
+ * \note            If #MBEDTLS_USE_PSA_CRYPTO is enabled, the PSA crypto
+ *                  subsystem must have been initialized by calling
+ *                  psa_crypto_init() before calling this function.
+ *
+ * \param ctx       The PK context to fill. It must have been initialized
+ *                  but not set up.
+ * \param key       Input buffer to parse.
+ *                  The buffer must contain the input exactly, with no
+ *                  extra trailing material.
+ * \param keylen    Size of \b key in bytes.
+ * \param type_k    Type of key: public key (type_k = 0) or private key (type_k = 1).
+ *
+ * \note            On entry, ctx must be empty, either freshly initialised
+ *                  with mbedtls_pk_init() or reset with mbedtls_pk_free(). If you need a
+ *                  specific key type, check the result with mbedtls_pk_can_do().
+ *
+ * \note            For compressed points, see #MBEDTLS_ECP_PF_COMPRESSED for
+ *                  limitations.
+ *
+ * \note            The key is also checked for correctness.
+ *
+ * \return          0 if successful, or a specific PK error code
+ */
+int mbedtls_pk_parse_ed25519_key(mbedtls_pk_context *ctx,
+                                const unsigned char *key, size_t keylen, int type_k);
 
 #if defined(MBEDTLS_FS_IO)
 /** \ingroup pk_module */

@@ -121,6 +121,8 @@ extern const mbedtls_pk_info_t mbedtls_ecdsa_info;
 extern const mbedtls_pk_info_t mbedtls_rsa_alt_info;
 #endif
 
+extern const mbedtls_pk_info_t mbedtls_ed25519_info;
+
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
 extern const mbedtls_pk_info_t mbedtls_ecdsa_opaque_info;
 extern const mbedtls_pk_info_t mbedtls_rsa_opaque_info;

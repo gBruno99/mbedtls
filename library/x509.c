@@ -729,6 +729,7 @@ int mbedtls_x509_get_sig_alg(const mbedtls_x509_buf *sig_oid, const mbedtls_x509
         return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_UNKNOWN_SIG_ALG, ret);
     }
 
+// added to x509custom
 #if defined(MBEDTLS_X509_RSASSA_PSS_SUPPORT)
     if (*pk_alg == MBEDTLS_PK_RSASSA_PSS) {
         mbedtls_pk_rsassa_pss_options *pss_opts;
@@ -1386,6 +1387,122 @@ int mbedtls_x509_get_key_usage(unsigned char **p,
     *key_usage = 0;
     for (i = 0; i < bs.len && i < sizeof(unsigned int); i++) {
         *key_usage |= (unsigned int) bs.p[i] << (8*i);
+    }
+
+    return 0;
+}
+
+int mbedtls_x509_get_dice_tcbInfo(unsigned char **p,
+                                 const unsigned char *end,
+                                 dice_tcbInfo *info_struct)
+{
+    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    size_t len;
+
+    size_t app_len;
+
+    if ((ret = mbedtls_asn1_get_tag(p, end, &len,
+                                    MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE)) != 0)
+    {
+        return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS, ret);
+    }
+
+    if (*p == end) {
+        return 0;
+    }
+
+    if ((ret = mbedtls_asn1_get_tag(p, end, &app_len,
+                                    MBEDTLS_ASN1_UTF8_STRING)) != 0)
+    {
+        return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS, ret);
+    }
+
+    memcpy(info_struct->vendor, *p, app_len);
+    *p += app_len;
+
+    if ((ret = mbedtls_asn1_get_tag(p, end, &app_len,
+                                    MBEDTLS_ASN1_UTF8_STRING)) != 0)
+    {
+        return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS, ret);
+    }
+
+    memcpy(info_struct->model, *p, app_len);
+    *p += app_len;
+
+    if ((ret = mbedtls_asn1_get_tag(p, end, &app_len,
+                                    MBEDTLS_ASN1_UTF8_STRING)) != 0)
+    {
+        return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS, ret);
+    }
+
+    memcpy(info_struct->version, *p, app_len);
+    *p += app_len;
+
+    ret = mbedtls_asn1_get_int(p, end, &info_struct->svn);
+    ret = mbedtls_asn1_get_int(p, end, &info_struct->layer);
+    ret = mbedtls_asn1_get_int(p, end, &info_struct->index);
+
+    if ((ret = mbedtls_asn1_get_tag(p, end, &len,
+                                    MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE)) != 0)
+    {
+        return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS, ret);
+    }
+
+    if ((ret = mbedtls_asn1_get_tag(p, end, &len,
+                                    MBEDTLS_ASN1_OID)) != 0)
+    {
+        return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS, ret);
+    }
+
+    memcpy(info_struct->fwids[0].OID_algo, *p, len);
+    info_struct->fwids[0].oid_len = len;
+
+    *p += len;
+
+    if ((ret = mbedtls_asn1_get_tag(p, end, &app_len,
+                                    MBEDTLS_ASN1_OCTET_STRING)) != 0)
+    {
+        return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS, ret);
+    }
+
+    memcpy(info_struct->fwids[0].digest, *p, app_len);
+    *p += app_len;
+
+    if ((ret = mbedtls_asn1_get_bitstring_null(p, end, &len)) != 0) {
+        return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS, ret);
+    }
+
+    memcpy(info_struct->flags, *p, len);
+    *p += len;
+
+    if ((ret = mbedtls_asn1_get_tag(p, end, &app_len,
+                                    MBEDTLS_ASN1_OCTET_STRING)) != 0)
+    {
+        return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS, ret);
+    }
+
+    memcpy(info_struct->vendorInfo, *p, app_len);
+    *p += app_len;
+
+    if ((ret = mbedtls_asn1_get_tag(p, end, &app_len,
+                                    MBEDTLS_ASN1_OCTET_STRING)) != 0)
+    {
+        return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS, ret);
+    }
+
+    memcpy(info_struct->type, *p, app_len);
+    *p += app_len;
+
+    if ((ret = mbedtls_asn1_get_bitstring_null(p, end, &len)) != 0) {
+        return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS, ret);
+    }
+
+    memcpy(info_struct->flagMask, *p, len);
+    *p += len;
+
+    if (*p != end) {
+        return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS,
+                                 MBEDTLS_ERR_ASN1_LENGTH_MISMATCH);
     }
 
     return 0;

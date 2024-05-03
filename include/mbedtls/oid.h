@@ -50,6 +50,7 @@
 #define MBEDTLS_OID_X509_EXT_INIHIBIT_ANYPOLICY          (1 << 13)
 #define MBEDTLS_OID_X509_EXT_FRESHEST_CRL                (1 << 14)
 #define MBEDTLS_OID_X509_EXT_NS_CERT_TYPE                (1 << 16)
+#define MBEDTLS_OID_X509_EXT_DICE_TCBINFO                (1 << 17)
 
 /*
  * Maximum number of OID components allowed
@@ -163,6 +164,13 @@
 #define MBEDTLS_OID_CRL_DISTRIBUTION_POINTS     MBEDTLS_OID_ID_CE "\x1F" /**< id-ce-cRLDistributionPoints OBJECT IDENTIFIER ::=  { id-ce 31 } */
 #define MBEDTLS_OID_INIHIBIT_ANYPOLICY          MBEDTLS_OID_ID_CE "\x36" /**< id-ce-inhibitAnyPolicy OBJECT IDENTIFIER ::=  { id-ce 54 } */
 #define MBEDTLS_OID_FRESHEST_CRL                MBEDTLS_OID_ID_CE "\x2E" /**< id-ce-freshestCRL OBJECT IDENTIFIER ::=  { id-ce 46 } */
+
+/*
+ * OIDs for TCB's DICE certificate extensions
+ */
+#define MBEDTLS_OID_TCG                        "\x67\x81\x05"                  /**< tcg OBJECT IDENTIFIER ::= {2 23 133} */                  
+#define MBEDTLS_OID_TCG_DICE                   MBEDTLS_OID_TCG "\x05\x04"      /**< tcg-dice OBJECT IDENTIFIER ::= { tcg platformClass(5) 4 } */
+#define MBEDTLS_OID_TCG_DICE_TCBINFO           MBEDTLS_OID_TCG_DICE "\x01"     /**< tcg-dice-TcbInfo OBJECT IDENTIFIER ::= {tcg-dice 1} */
 
 /*
  * Certificate policies

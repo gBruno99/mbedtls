@@ -497,6 +497,7 @@ static const uint16_t mbedtls_byte_order_detector = { 0x100 };
  * \param   offset  Offset from \p data where to put the least significant
  *                  byte of the 16 bits unsigned integer \p n.
  */
+// different from x509custom
 #define MBEDTLS_PUT_UINT16_LE(n, data, offset)                                   \
     {                                                                            \
         if (MBEDTLS_IS_BIG_ENDIAN)                                               \

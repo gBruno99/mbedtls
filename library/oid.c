@@ -313,6 +313,12 @@ static const oid_x509_ext_t oid_x509_ext[] =
         MBEDTLS_OID_X509_EXT_SUBJECT_KEY_IDENTIFIER,
     },
     {
+        OID_DESCRIPTOR(MBEDTLS_OID_TCG_DICE_TCBINFO,
+                       "tcg-dice-TcbInfo",
+                       "DiceTcbInfo"),
+        MBEDTLS_OID_X509_EXT_DICE_TCBINFO,
+    },
+    {
         OID_DESCRIPTOR(MBEDTLS_OID_AUTHORITY_KEY_IDENTIFIER,
                        "id-ce-authorityKeyIdentifier",
                        "Authority Key Identifier"),
@@ -465,6 +471,10 @@ static const oid_sig_alg_t oid_sig_alg[] =
     },
 #endif /* MBEDTLS_RSA_C */
     {
+        OID_DESCRIPTOR(MBEDTLS_OID_ED25519,           "id-Ed25519",              "ED25519"),
+        MBEDTLS_MD_NONE,     MBEDTLS_PK_ED25519,
+    },
+    {
         NULL_OID_DESCRIPTOR,
         MBEDTLS_MD_NONE, MBEDTLS_PK_NONE,
     },
@@ -516,6 +526,10 @@ static const oid_pk_alg_t oid_pk_alg[] =
     {
         OID_DESCRIPTOR(MBEDTLS_OID_EC_ALG_ECDH,         "id-ecDH",          "EC key for ECDH"),
         MBEDTLS_PK_ECKEY_DH,
+    },
+    {
+        OID_DESCRIPTOR(MBEDTLS_OID_ED25519,             "id-Ed25519",       "ED25519 key"),
+        MBEDTLS_PK_ED25519,
     },
     {
         NULL_OID_DESCRIPTOR,

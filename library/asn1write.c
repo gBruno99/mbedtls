@@ -23,6 +23,7 @@
 
 int mbedtls_asn1_write_len(unsigned char **p, const unsigned char *start, size_t len)
 {
+// added to x509custom
 #if SIZE_MAX > 0xFFFFFFFF
     if (len > 0xFFFFFFFF) {
         return MBEDTLS_ERR_ASN1_INVALID_LENGTH;
@@ -162,6 +163,7 @@ int mbedtls_asn1_write_algorithm_identifier(unsigned char **p, const unsigned ch
     return mbedtls_asn1_write_algorithm_identifier_ext(p, start, oid, oid_len, par_len, 1);
 }
 
+// used even as mbedtls_asn1_write_ed25519_identifier
 int mbedtls_asn1_write_algorithm_identifier_ext(unsigned char **p, const unsigned char *start,
                                                 const char *oid, size_t oid_len,
                                                 size_t par_len, int has_par)

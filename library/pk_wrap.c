@@ -14,6 +14,7 @@
 #include "pk_internal.h"
 #include "mbedtls/error.h"
 #include "mbedtls/psa_util.h"
+#include "ed25519/ed25519.h"
 
 /* Even if RSA not activated, for the sake of RSA-alt */
 #include "mbedtls/rsa.h"
@@ -1580,5 +1581,156 @@ const mbedtls_pk_info_t mbedtls_rsa_opaque_info = {
 };
 
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
+
+static size_t ed25519_get_bitlen(mbedtls_pk_context *pk)
+{
+    (void) pk;
+    return 8 * ED25519_PUBLIC_KEY_SIZE;
+}
+
+static int ed25519_can_do(mbedtls_pk_type_t type)
+{
+    return type == MBEDTLS_PK_ED25519;
+}
+
+static int ed25519_verify_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
+                               const unsigned char *hash, size_t hash_len,
+                               const unsigned char *sig, size_t sig_len)
+{
+    (void) md_alg;
+    (void) sig_len;
+    mbedtls_ed25519_context *ed25519 = mbedtls_pk_ed25519(*pk);
+    
+    return ed25519_verify(sig, hash, hash_len, ed25519->pub_key);
+}
+
+static int mbedtls_ed25519_write_signature_restartable(mbedtls_ed25519_context *ctx, mbedtls_md_type_t md_alg,
+                                                       const unsigned char *hash, size_t hlen,
+                                                       unsigned char *sig, size_t sig_size, size_t *slen,
+                                                       int (*f_rng)(void *, unsigned char *, size_t),
+                                                       void *p_rng, mbedtls_ed25519_restart_ctx *rs_ctx)
+{
+    (void) md_alg;
+    (void) sig_size;
+    (void) f_rng;
+    (void) p_rng;
+    (void) rs_ctx;
+    ed25519_sign(sig, hash, hlen, ctx->pub_key, ctx->priv_key);
+    *slen = ED25519_SIGNATURE_SIZE;
+    return 0;
+}
+
+static int mbedtls_ed25519_write_signature(mbedtls_ed25519_context *ctx, mbedtls_md_type_t md_alg,
+                                           const unsigned char *hash, size_t hlen,
+                                           unsigned char *sig, size_t sig_size, size_t *slen,
+                                           int (*f_rng)(void *, unsigned char *, size_t),
+                                           void *p_rng)
+{
+    return mbedtls_ed25519_write_signature_restartable(
+        ctx, md_alg, hash, hlen, sig, sig_size, slen,
+        f_rng, p_rng, NULL);
+}
+
+static int ed25519_sign_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
+                             const unsigned char *hash, size_t hash_len,
+                             unsigned char *sig, size_t sig_size, size_t *sig_len,
+                             int (*f_rng)(void *, unsigned char *, size_t), 
+                             void *p_rng)
+{   
+    return mbedtls_ed25519_write_signature(mbedtls_pk_ed25519(*pk),
+                                         md_alg, hash, hash_len,
+                                         sig, sig_size, sig_len,
+                                         f_rng, p_rng);
+}
+
+static int mbedtls_ed25519_check_pub_priv(unsigned char* priv, unsigned char* pub, unsigned char* seed)
+{  
+    unsigned char result[ED25519_PUBLIC_KEY_SIZE] = {0}; 
+
+    (void) priv;
+    (void) seed;
+
+    for(int i = 0; i < ED25519_PUBLIC_KEY_SIZE; i++){
+        if (result[i] != pub[i])
+            return 1;
+    }
+
+    return 0;
+}
+
+static int ed25519_check_pair_wrap(mbedtls_pk_context *pub, mbedtls_pk_context *prv,
+                                  int (*f_rng)(void *, unsigned char *, size_t),
+                                  void *p_rng)
+{ 
+    /**
+     * TO BE DONE
+     * funzione che a partire da pub prende la coppia di chiavi pubblica privata, il seed contenuto in prv e genera
+     * nuovamente la pubblica a partire dalla privata, ritornando 0 se matchano le due pubbliche
+     */
+    (void) f_rng;
+    (void) p_rng;
+    return mbedtls_ed25519_check_pub_priv((mbedtls_pk_ed25519(*pub))->priv_key,
+                                      (mbedtls_pk_ed25519(*pub))->pub_key,
+                                      (mbedtls_pk_ed25519(*prv))->priv_key);
+}
+
+static void mbedtls_ed25519_init(mbedtls_ed25519_context *ctx)
+{
+    memset(ctx, 0, sizeof(mbedtls_ed25519_context));
+    //ctx->priv_key = mbedtls_calloc(0, 64);
+    //ctx->pub_key = mbedtls_calloc(0, 32);
+
+    //memset(ctx->priv_key, 0, 64);
+    //memset(ctx->pub_key, 0, 32);
+    return;
+}
+
+static void *ed25519_alloc_wrap(void)
+{   
+    void *ctx = mbedtls_calloc(1, sizeof(mbedtls_ed25519_context));
+
+    if (ctx != NULL) {
+        mbedtls_ed25519_init((mbedtls_ed25519_context *) ctx);
+    }
+
+    return ctx;
+}
+
+static void mbedtls_ed25519_free(mbedtls_ed25519_context *ctx)
+{
+    if (ctx == NULL) {
+        return;
+    }
+    //mbedtls_free(ctx->priv_key);
+    //mbedtls_free(ctx->pub_key);
+    return;
+}
+
+static void ed25519_free_wrap(void *ctx)
+{
+    mbedtls_ed25519_free((mbedtls_ed25519_context *) ctx);
+    mbedtls_free(ctx);
+}
+
+const mbedtls_pk_info_t mbedtls_ed25519_info = {
+    .type = MBEDTLS_PK_ED25519,
+    .name = "ED25519",
+    .get_bitlen = ed25519_get_bitlen,
+    .can_do = ed25519_can_do,
+    .verify_func = ed25519_verify_wrap,
+    .sign_func = ed25519_sign_wrap,
+#if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
+    .verify_rs_func = NULL,
+    .sign_rs_func = NULL,
+    .rs_alloc_func = NULL,
+    .rs_free_func = NULL,
+#endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
+    .decrypt_func = NULL,
+    .encrypt_func = NULL,
+    .check_pair_func = ed25519_check_pair_wrap,
+    .ctx_alloc_func = ed25519_alloc_wrap,
+    .ctx_free_func = ed25519_free_wrap,
+    .debug_func = NULL,
+};
 
 #endif /* MBEDTLS_PK_C */
