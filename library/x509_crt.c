@@ -1043,7 +1043,7 @@ static int x509_get_crt_ext(unsigned char **p,
                 }
                 break;
 
-            case MBEDTLS_OID_X509_EXT_DICE_TCBINFO:
+            case MBEDTLS_X509_EXT_DICE_TCBINFO:
                 if((ret = mbedtls_x509_get_dice_tcbInfo(p, end_ext_octet,
                                                 &crt->dice_tcb_info)) != 0) {
                     return ret;
