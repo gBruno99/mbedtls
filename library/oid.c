@@ -472,7 +472,7 @@ static const oid_sig_alg_t oid_sig_alg[] =
 #endif /* MBEDTLS_RSA_C */
     {
         OID_DESCRIPTOR(MBEDTLS_OID_ED25519,           "id-Ed25519",              "ED25519"),
-        MBEDTLS_MD_NONE,     MBEDTLS_PK_ED25519,
+        MBEDTLS_MD_SHA512,     MBEDTLS_PK_ED25519,
     },
     {
         NULL_OID_DESCRIPTOR,

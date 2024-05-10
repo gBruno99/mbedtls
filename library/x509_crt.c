@@ -153,6 +153,18 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_suiteb =
     0,
 };
 
+/**
+ * Profile for SPIRS environment
+ */
+const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_spirs =
+{
+    MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA512) |
+    MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA3_512),
+    MBEDTLS_X509_ID_FLAG(MBEDTLS_PK_ED25519),
+    0,
+    0,
+};
+
 /*
  * Empty / all-forbidden profile
  */
@@ -208,6 +220,11 @@ static int x509_profile_check_key(const mbedtls_x509_crt_profile *profile,
                                   const mbedtls_pk_context *pk)
 {
     const mbedtls_pk_type_t pk_alg = mbedtls_pk_get_type(pk);
+
+    if(pk_alg == MBEDTLS_PK_ED25519){
+        mbedtls_ed25519_context *ed25519 = mbedtls_pk_ed25519(*pk);
+        return (ed25519->len == ED25519_PUBLIC_KEY_SIZE)?0:-1; 
+    }
 
 #if defined(MBEDTLS_RSA_C)
     if (pk_alg == MBEDTLS_PK_RSA || pk_alg == MBEDTLS_PK_RSASSA_PSS) {
@@ -2171,6 +2188,11 @@ static int x509_crt_check_signature(const mbedtls_x509_crt *child,
     (void) rs_ctx;
 #endif
 
+    if(child->sig_pk == MBEDTLS_PK_ED25519) {
+        return mbedtls_pk_verify_ext(child->sig_pk, child->sig_opts, &parent->pk,
+                                     child->sig_md, child->tbs.p, child->tbs.len,
+                                     child->sig.p, child->sig.len);
+    }
     return mbedtls_pk_verify_ext(child->sig_pk, child->sig_opts, &parent->pk,
                                  child->sig_md, hash, hash_len,
                                  child->sig.p, child->sig.len);

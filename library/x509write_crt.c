@@ -656,7 +656,8 @@ int mbedtls_x509write_crt_der(mbedtls_x509write_cert *ctx,
      * Make signature
      */
 
-    if (pk_alg == MBEDTLS_PK_ED25519 && ctx->md_alg == MBEDTLS_MD_NONE) {
+    if (pk_alg == MBEDTLS_PK_ED25519) {
+        ctx->md_alg = MBEDTLS_MD_NONE;
         if ((ret = mbedtls_pk_sign(ctx->issuer_key, ctx->md_alg,
                                c, len, sig, sizeof(sig), &sig_len,
                                f_rng, p_rng)) != 0) {

@@ -22,6 +22,7 @@ int pk_set_ed25519privkey(unsigned char **p, mbedtls_ed25519_context *ed25519) {
         ed25519->priv_key[i] = (*p)[i];
     }
     ed25519->len = ED25519_PRIVATE_KEY_SIZE;
+    ed25519->has_priv_key = 1;
 
     return 0;
 }
@@ -51,4 +52,10 @@ int pk_write_ed25519_pubkey(unsigned char **p, unsigned char *start, mbedtls_ed2
     // ----------------------------------
 
     return (int) len;
-} 
+}
+
+int pk_parse_ed25519_pubkey(unsigned char **p, mbedtls_ed25519_context *ed25519) {
+    int ret = pk_set_ed25519pubkey(p, ed25519);
+    *p += 32;
+    return ret;
+}

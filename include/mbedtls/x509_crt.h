@@ -340,6 +340,11 @@ extern const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_next;
 extern const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_suiteb;
 
 /**
+ * Profile for SPIRS environment
+ */
+extern const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_spirs;
+
+/**
  * Empty profile that allows nothing. Useful as a basis for constructing
  * custom profiles.
  */

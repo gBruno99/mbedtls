@@ -1590,7 +1590,7 @@ static size_t ed25519_get_bitlen(mbedtls_pk_context *pk)
 
 static int ed25519_can_do(mbedtls_pk_type_t type)
 {
-    return type == MBEDTLS_PK_ED25519;
+    return type == MBEDTLS_PK_ED25519/* || type == MBEDTLS_PK_ECDSA*/;
 }
 
 static int ed25519_verify_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
@@ -1601,7 +1601,7 @@ static int ed25519_verify_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,
     (void) sig_len;
     mbedtls_ed25519_context *ed25519 = mbedtls_pk_ed25519(*pk);
     
-    return ed25519_verify(sig, hash, hash_len, ed25519->pub_key);
+    return (ed25519_verify(sig, hash, hash_len, ed25519->pub_key)==1)?0:1;
 }
 
 static int mbedtls_ed25519_write_signature_restartable(mbedtls_ed25519_context *ctx, mbedtls_md_type_t md_alg,
@@ -1615,8 +1615,15 @@ static int mbedtls_ed25519_write_signature_restartable(mbedtls_ed25519_context *
     (void) f_rng;
     (void) p_rng;
     (void) rs_ctx;
-    ed25519_sign(sig, hash, hlen, ctx->pub_key, ctx->priv_key);
-    *slen = ED25519_SIGNATURE_SIZE;
+
+    // if (hlen == 0) // check why
+    //     hlen = 64;
+    if(ctx->has_priv_key == 1) {
+        ed25519_sign(sig, hash, hlen, ctx->pub_key, ctx->priv_key);
+        *slen = ED25519_SIGNATURE_SIZE;
+    } else {
+        return -1;
+    }
     return 0;
 }
 
@@ -1669,14 +1676,17 @@ static int ed25519_check_pair_wrap(mbedtls_pk_context *pub, mbedtls_pk_context *
      */
     (void) f_rng;
     (void) p_rng;
-    return mbedtls_ed25519_check_pub_priv((mbedtls_pk_ed25519(*pub))->priv_key,
-                                      (mbedtls_pk_ed25519(*pub))->pub_key,
-                                      (mbedtls_pk_ed25519(*prv))->priv_key);
+    if((mbedtls_pk_ed25519(*pub))->has_priv_key == 1)  
+        return mbedtls_ed25519_check_pub_priv((mbedtls_pk_ed25519(*pub))->priv_key,
+                                            (mbedtls_pk_ed25519(*pub))->pub_key,
+                                            (mbedtls_pk_ed25519(*prv))->priv_key);
+    return -1;
 }
 
 static void mbedtls_ed25519_init(mbedtls_ed25519_context *ctx)
 {
     memset(ctx, 0, sizeof(mbedtls_ed25519_context));
+    ctx->has_priv_key = 0;
     //ctx->priv_key = mbedtls_calloc(0, 64);
     //ctx->pub_key = mbedtls_calloc(0, 32);
 
@@ -1725,12 +1735,12 @@ const mbedtls_pk_info_t mbedtls_ed25519_info = {
     .rs_alloc_func = NULL,
     .rs_free_func = NULL,
 #endif /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
-    .decrypt_func = NULL,
-    .encrypt_func = NULL,
+    .decrypt_func = NULL, // ed25519_decrypt_wrap not implementable
+    .encrypt_func = NULL, // ed25519_encrypt_wrap not implementable
     .check_pair_func = ed25519_check_pair_wrap,
     .ctx_alloc_func = ed25519_alloc_wrap,
     .ctx_free_func = ed25519_free_wrap,
-    .debug_func = NULL,
+    .debug_func = NULL,   // ed25519_debug_wrap not implemented
 };
 
 #endif /* MBEDTLS_PK_C */

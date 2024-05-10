@@ -554,11 +554,7 @@ int mbedtls_pk_parse_subpubkey(unsigned char **p, const unsigned char *end,
     }
 
     if(pk_alg == MBEDTLS_PK_ED25519) {
-        mbedtls_asn1_bitstring bs = { 0, 0, NULL };
-        if ((ret = mbedtls_asn1_get_bitstring(p, end, &bs)) != 0) {
-            return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_PK_INVALID_PUBKEY, ret);
-        }
-        ret = pk_set_ed25519pubkey(&bs.p, mbedtls_pk_ed25519(*pk));
+        ret = pk_parse_ed25519_pubkey(p, mbedtls_pk_ed25519(*pk));
     } else
 #if defined(MBEDTLS_RSA_C)
     if (pk_alg == MBEDTLS_PK_RSA) {
@@ -1317,7 +1313,7 @@ int mbedtls_pk_parse_ed25519_key(mbedtls_pk_context *ctx,
     }
 
     p = (unsigned char *) key;
-    if (type_k == 0) {
+    if (type_k == ED25519_PARSE_PUBLIC_KEY) {
         ret = pk_set_ed25519pubkey(&p, mbedtls_pk_ed25519(*ctx));
     } else {
         ret = pk_set_ed25519privkey(&p, mbedtls_pk_ed25519(*ctx));

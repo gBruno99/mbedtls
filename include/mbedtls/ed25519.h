@@ -10,6 +10,8 @@
 #define ED25519_PUBLIC_KEY_SIZE     32
 #define ED25519_PRIVATE_KEY_SIZE    64
 #define ED25519_SIGNATURE_SIZE      64
+#define ED25519_PARSE_PUBLIC_KEY    0
+#define ED25519_PARSE_PRIVATE_KEY   1
 
 typedef struct mbedtls_ed25519_context {
     int MBEDTLS_PRIVATE(ver);                   /*!<  Reserved for internal purposes.
@@ -20,6 +22,7 @@ typedef struct mbedtls_ed25519_context {
     size_t len;                                 /*!<  The size of \p N in Bytes. */
     unsigned char pub_key[ED25519_PUBLIC_KEY_SIZE];
     unsigned char priv_key[ED25519_PRIVATE_KEY_SIZE];
+    int has_priv_key;
 
 }
 mbedtls_ed25519_context;
@@ -30,5 +33,6 @@ typedef void mbedtls_ed25519_restart_ctx;
 int pk_set_ed25519pubkey(unsigned char **p, mbedtls_ed25519_context *ed25519);
 int pk_set_ed25519privkey(unsigned char **p, mbedtls_ed25519_context *ed25519);
 int pk_write_ed25519_pubkey(unsigned char **p, unsigned char *start, mbedtls_ed25519_context *ed25519);
+int pk_parse_ed25519_pubkey(unsigned char **p, mbedtls_ed25519_context *ed25519);
 
 #endif
