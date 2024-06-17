@@ -14,7 +14,7 @@
 #include "pk_internal.h"
 #include "mbedtls/error.h"
 #include "mbedtls/psa_util.h"
-#include "ed25519/ed25519.h"
+#include "mbedtls/ed25519.h"
 
 /* Even if RSA not activated, for the sake of RSA-alt */
 #include "mbedtls/rsa.h"

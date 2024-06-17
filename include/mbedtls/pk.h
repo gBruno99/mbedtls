@@ -16,7 +16,7 @@
 
 #include "mbedtls/md.h"
 
-#include "mbedtls/ed25519.h"
+#include "mbedtls/ed25519_pk.h"
 
 #if defined(MBEDTLS_RSA_C)
 #include "mbedtls/rsa.h"

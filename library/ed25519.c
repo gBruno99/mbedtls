@@ -1,4 +1,4 @@
-#include "mbedtls/ed25519.h"
+#include "mbedtls/ed25519_pk.h"
 #include "mbedtls/asn1.h"
 #include "mbedtls/asn1write.h"
 #include "mbedtls/error.h"

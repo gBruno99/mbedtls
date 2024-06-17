@@ -1,4 +1,4 @@
-#include "ed25519/ed25519.h"
+#include "mbedtls/ed25519.h"
 #include "mbedtls/sha512.h"
 #include "ed25519/ge.h"
 #include "ed25519/sc.h"

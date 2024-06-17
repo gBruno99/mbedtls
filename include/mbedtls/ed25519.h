@@ -1,38 +1,38 @@
-#ifndef MBEDTLS_ED25519_H
-#define MBEDTLS_ED25519_H
+#ifndef ED25519_H
+#define ED25519_H
 
 #include <stddef.h>
 
-#include "mbedtls/private_access.h"
+#if defined(_WIN32)
+    #if defined(ED25519_BUILD_DLL)
+        #define ED25519_DECLSPEC __declspec(dllexport)
+    #elif defined(ED25519_DLL)
+        #define ED25519_DECLSPEC __declspec(dllimport)
+    #else
+        #define ED25519_DECLSPEC
+    #endif
+#else
+    #define ED25519_DECLSPEC
+#endif
 
-#include "mbedtls/build_info.h"
 
-#define ED25519_PUBLIC_KEY_SIZE     32
-#define ED25519_PRIVATE_KEY_SIZE    64
-#define ED25519_SIGNATURE_SIZE      64
-#define ED25519_PARSE_PUBLIC_KEY    0
-#define ED25519_PARSE_PRIVATE_KEY   1
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-typedef struct mbedtls_ed25519_context {
-    int MBEDTLS_PRIVATE(ver);                   /*!<  Reserved for internal purposes.
-                                                 *    Do not set this field in application
-                                                 *    code. Its meaning might change without
-                                                 *    notice. 
-                                                 */
-    size_t len;                                 /*!<  The size of \p N in Bytes. */
-    unsigned char pub_key[ED25519_PUBLIC_KEY_SIZE];
-    unsigned char priv_key[ED25519_PRIVATE_KEY_SIZE];
-    int has_priv_key;
+#ifndef ED25519_NO_SEED
+int ED25519_DECLSPEC ed25519_create_seed(unsigned char *seed);
+#endif
 
+void ED25519_DECLSPEC ed25519_create_keypair(unsigned char *public_key, unsigned char *private_key, const unsigned char *seed);
+void ED25519_DECLSPEC ed25519_sign(unsigned char *signature, const unsigned char *message, size_t message_len, const unsigned char *public_key, const unsigned char *private_key);
+int ED25519_DECLSPEC ed25519_verify(const unsigned char *signature, const unsigned char *message, size_t message_len, const unsigned char *public_key);
+
+//void ED25519_DECLSPEC ed25519_add_scalar(unsigned char *public_key, unsigned char *private_key, const unsigned char *scalar);
+//void ED25519_DECLSPEC ed25519_key_exchange(unsigned char *shared_secret, const unsigned char *public_key, const unsigned char *private_key);
+
+#ifdef __cplusplus
 }
-mbedtls_ed25519_context;
-
-typedef void mbedtls_ed25519_restart_ctx;
-
-// removed pk_get_ed25519pubkey
-int pk_set_ed25519pubkey(unsigned char **p, mbedtls_ed25519_context *ed25519);
-int pk_set_ed25519privkey(unsigned char **p, mbedtls_ed25519_context *ed25519);
-int pk_write_ed25519_pubkey(unsigned char **p, unsigned char *start, mbedtls_ed25519_context *ed25519);
-int pk_parse_ed25519_pubkey(unsigned char **p, mbedtls_ed25519_context *ed25519);
+#endif
 
 #endif
