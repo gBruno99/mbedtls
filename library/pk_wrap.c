@@ -1590,7 +1590,7 @@ static size_t ed25519_get_bitlen(mbedtls_pk_context *pk)
 
 static int ed25519_can_do(mbedtls_pk_type_t type)
 {
-    return type == MBEDTLS_PK_ED25519/* || type == MBEDTLS_PK_ECDSA*/;
+    return type == MBEDTLS_PK_ED25519 || type == MBEDTLS_PK_ECDSA;
 }
 
 static int ed25519_verify_wrap(mbedtls_pk_context *pk, mbedtls_md_type_t md_alg,

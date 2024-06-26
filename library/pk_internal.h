@@ -87,6 +87,10 @@ static inline mbedtls_ecp_group_id mbedtls_pk_get_ec_group_id(const mbedtls_pk_c
 {
     mbedtls_ecp_group_id id;
 
+    if(pk->pk_info == mbedtls_pk_info_from_type(MBEDTLS_PK_ED25519) ) {
+        return MBEDTLS_ECP_DP_CURVE25519;
+    }
+
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
     if (mbedtls_pk_get_type(pk) == MBEDTLS_PK_OPAQUE) {
         psa_key_attributes_t opaque_attrs = PSA_KEY_ATTRIBUTES_INIT;
