@@ -40,6 +40,31 @@ unsigned char mbedtls_ct_base64_enc_char(unsigned char value);
  */
 signed char mbedtls_ct_base64_dec_value(unsigned char c);
 
+/** Given a value in the range 0..63, return the corresponding Base64-URL digit.
+ *
+ * The implementation assumes that letters are consecutive (e.g. ASCII
+ * but not EBCDIC).
+ *
+ * \param value     A value in the range 0..63.
+ *
+ * \return          A base64url digit converted from \p value.
+ */
+unsigned char mbedtls_ct_base64url_enc_char(unsigned char value);
+
+/** Given a Base64-URL digit, return its value.
+ *
+ * If c is not a Base64 digit ('A'..'Z', 'a'..'z', '0'..'9', '-' or '_'),
+ * return -1.
+ *
+ * The implementation assumes that letters are consecutive (e.g. ASCII
+ * but not EBCDIC).
+ *
+ * \param c     A base64url digit.
+ *
+ * \return      The value of the base64url digit \p c.
+ */
+signed char mbedtls_ct_base64url_dec_value(unsigned char c);
+
 #endif /* MBEDTLS_TEST_HOOKS */
 
 #endif /* MBEDTLS_BASE64_INTERNAL */
