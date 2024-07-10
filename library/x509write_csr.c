@@ -35,6 +35,9 @@
 #endif
 
 #include "mbedtls/platform.h"
+#include "mbedtls/base64.h"
+
+#define CMW_MAX_SIZE    512
 
 void mbedtls_x509write_csr_init(mbedtls_x509write_csr *ctx)
 {
@@ -120,6 +123,52 @@ int mbedtls_x509write_csr_set_ns_cert_type(mbedtls_x509write_csr *ctx,
     ret = mbedtls_x509write_csr_set_extension(ctx, MBEDTLS_OID_NS_CERT_TYPE,
                                               MBEDTLS_OID_SIZE(MBEDTLS_OID_NS_CERT_TYPE),
                                               0, c, (size_t) ret);
+    if (ret != 0) {
+        return ret;
+    }
+
+    return 0;
+}
+
+static int x509write_csr_write_dice_cmw(unsigned char* buf, size_t buf_size, size_t *olen, mbedtls_x509_buf dice_cmw_json) {
+
+    if(buf_size <= (sizeof(CMW_SEQUENCE_STRUCTURE)+sizeof(CMW_SEQUENCE_TYPE_JSON)+dice_cmw_json.len-4)) {
+        return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
+    }
+
+    *olen = sprintf((char*) buf, CMW_SEQUENCE_STRUCTURE, (unsigned int) CMW_JSON_RECORD, CMW_SEQUENCE_TYPE_JSON, dice_cmw_json.p, (unsigned int) dice_cmw_json.tag);
+
+    return 0;
+}
+
+int mbedtls_x509write_csr_set_dice_cmw(mbedtls_x509write_csr *ctx,
+                                           mbedtls_x509_buf dice_cmw_json)
+{
+    unsigned char buf[2*CMW_MAX_SIZE] = { 0 };
+    unsigned char *c;
+    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    size_t len = 0;
+    unsigned char dice_cmw_json_enc[CMW_MAX_SIZE] = {0};
+    size_t dice_cmw_json_enc_len = 0;
+
+    c = buf + 2*CMW_MAX_SIZE;
+
+    ret = x509write_csr_write_dice_cmw(dice_cmw_json_enc, sizeof(dice_cmw_json_enc), &dice_cmw_json_enc_len, 
+                                        dice_cmw_json);
+    if (ret != 0) {
+        return ret;
+    }
+
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_octet_string(&c, buf, dice_cmw_json_enc, dice_cmw_json_enc_len));
+
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_len(&c, buf, len));
+    MBEDTLS_ASN1_CHK_ADD(len, mbedtls_asn1_write_tag(&c, buf,
+                                                     MBEDTLS_ASN1_CONSTRUCTED |
+                                                     MBEDTLS_ASN1_SEQUENCE));
+
+    ret = mbedtls_x509write_csr_set_extension(ctx, MBEDTLS_OID_TCG_DICE_CMW,
+                                              MBEDTLS_OID_SIZE(MBEDTLS_OID_TCG_DICE_CMW),
+                                              0, c, (size_t) len);
     if (ret != 0) {
         return ret;
     }

@@ -171,6 +171,15 @@ static int x509_csr_parse_extensions(mbedtls_x509_csr *csr,
                     return ret;
                 }
                 break;
+            
+            case MBEDTLS_X509_EXT_DICE_CMW:
+                /* Parse TCG DICE Conceptual Message Wrapper Extension */
+                if((ret = mbedtls_x509_get_dice_cmw(p, end_ext_data,
+                                                    &csr->dice_cmw_json)) != 0) {
+                    return ret;
+                }
+                break;
+
             default:
                 /*
                  * If this is a non-critical extension, which the oid layer
@@ -626,6 +635,7 @@ void mbedtls_x509_csr_free(mbedtls_x509_csr *csr)
     mbedtls_free(csr->sig_opts);
 #endif
 
+    mbedtls_free(csr->dice_cmw_json.p);
     mbedtls_asn1_free_named_data_list_shallow(csr->subject.next);
     mbedtls_asn1_sequence_free(csr->subject_alt_names.next);
 

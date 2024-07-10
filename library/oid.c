@@ -319,6 +319,12 @@ static const oid_x509_ext_t oid_x509_ext[] =
         MBEDTLS_OID_X509_EXT_DICE_TCBINFO,
     },
     {
+        OID_DESCRIPTOR(MBEDTLS_OID_TCG_DICE_CMW,
+                       "tcg-dice-conceptual-message-wrapper",
+                       "ConceptualMessageWrapper"),
+        MBEDTLS_OID_X509_EXT_DICE_CMW,
+    },
+    {
         OID_DESCRIPTOR(MBEDTLS_OID_AUTHORITY_KEY_IDENTIFIER,
                        "id-ce-authorityKeyIdentifier",
                        "Authority Key Identifier"),

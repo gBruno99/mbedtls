@@ -70,6 +70,9 @@ int mbedtls_x509_get_key_usage(unsigned char **p,
 int mbedtls_x509_get_dice_tcbInfo(unsigned char **p,
                                   const unsigned char *end,
                                   dice_tcbInfo *info_struct);
+int mbedtls_x509_get_dice_cmw(unsigned char **p,
+                              const unsigned char *end,
+                              mbedtls_x509_buf *dice_cmw_json);
 int mbedtls_x509_get_subject_alt_name(unsigned char **p,
                                       const unsigned char *end,
                                       mbedtls_x509_sequence *subject_alt_name);

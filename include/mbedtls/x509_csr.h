@@ -14,6 +14,7 @@
 #include "mbedtls/build_info.h"
 
 #include "mbedtls/x509.h"
+#include "mbedtls/x509_crt.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,6 +51,8 @@ typedef struct mbedtls_x509_csr {
     unsigned char ns_cert_type; /**< Optional Netscape certificate type extension value: See the values in x509.h */
     mbedtls_x509_sequence subject_alt_names; /**< Optional list of raw entries of Subject Alternative Names extension. These can be later parsed by mbedtls_x509_parse_subject_alt_name. */
 
+    mbedtls_x509_buf dice_cmw_json;      /**< DICE Conceptual Message Wrapper JSON object. */
+
     int MBEDTLS_PRIVATE(ext_types);              /**< Bit string containing detected and parsed extensions */
 
     mbedtls_x509_buf sig_oid;
@@ -59,6 +62,16 @@ typedef struct mbedtls_x509_csr {
     void *MBEDTLS_PRIVATE(sig_opts);         /**< Signature options to be passed to mbedtls_pk_verify_ext(), e.g. for RSASSA-PSS */
 }
 mbedtls_x509_csr;
+
+#define CM_TYPE_REFERENCE_VALUES        (1 << 0)
+#define CM_TYPE_ENDORSEMENTS            (1 << 1)
+#define CM_TYPE_EVIDENCE                (1 << 2)
+#define CM_TYPE_ATTESTATION_RESULTS     (1 << 3)
+
+#define CMW_JSON_RECORD                 '\x5b'
+#define CMW_SEQUENCE_TYPE_JSON          "application/spirs.mbedtls.dice.patch1" 
+
+#define CMW_SEQUENCE_STRUCTURE          "%u[\"%s\", \"%s\", %u]"
 
 /**
  * Container for writing a CSR
@@ -304,6 +317,17 @@ int mbedtls_x509write_csr_set_subject_alternative_name(mbedtls_x509write_csr *ct
  */
 int mbedtls_x509write_csr_set_ns_cert_type(mbedtls_x509write_csr *ctx,
                                            unsigned char ns_cert_type);
+
+/**
+ * \brief           Set the TCG DICE Conceptual Message Wrapper Extension
+ *
+ * \param ctx               CSR context to use
+ * \param dice_cmw_json     Conceptual Message to write
+ *
+ * \return          0 if successful, or MBEDTLS_ERR_X509_ALLOC_FAILED
+ */
+int mbedtls_x509write_csr_set_dice_cmw(mbedtls_x509write_csr *ctx,
+                                       mbedtls_x509_buf dice_cmw_json);
 
 /**
  * \brief           Generic function to add to or replace an extension in the

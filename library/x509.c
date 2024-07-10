@@ -43,6 +43,11 @@
 #include <time.h>
 #endif
 
+#include <ctype.h>
+#include "mbedtls/x509_csr.h"
+
+#define CMW_MAX_SIZE    512
+
 #define CHECK(code)                                     \
     do {                                                \
         if ((ret = (code)) != 0) {                      \
@@ -57,6 +62,18 @@
         }                                               \
     } while (0)
 
+#define CHECK_OVERFLOW                                  \
+    if((*p) >= end) {                                   \
+        return MBEDTLS_ERR_X509_INVALID_EXTENSIONS;     \
+    }
+
+#define SKIP_SPACES                                     \
+    for(unsigned char c = *(*p);((*p) < end) && (c == ' ' || c == '\n' || c == '\t'); c = *(++(*p)))
+
+#define CHECK_CHAR(c)                                   \
+    if(*((*p)++) != c) {                                \
+        return MBEDTLS_ERR_X509_INVALID_EXTENSIONS;     \
+    }                                                   
 /*
  *  CertificateSerialNumber  ::=  INTEGER
  */
@@ -1506,6 +1523,154 @@ int mbedtls_x509_get_dice_tcbInfo(unsigned char **p,
     }
 
     return 0;
+}
+
+static int x509_get_dice_cmw_string(unsigned char **p,
+                             const unsigned char *end,
+                             unsigned char *buf, size_t *buf_len) 
+{
+    size_t len = 0;
+
+    SKIP_SPACES;
+    CHECK_OVERFLOW
+    CHECK_CHAR('"');
+
+    while(((*p) < end) && (*(*p) != '"') && (len < *buf_len)) {
+        buf[len++] = *((*p)++);
+    }
+
+    CHECK_OVERFLOW
+    if(len >= *buf_len) {
+        return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
+    }
+
+    CHECK_CHAR('"');
+
+    SKIP_SPACES;
+    CHECK_OVERFLOW
+
+    *buf_len = len;
+
+    return 0;
+}
+
+static int x509_get_dice_cmw_int(unsigned char **p,
+                             const unsigned char *end,
+                             int *ind) 
+{
+    unsigned char buf[16];
+    size_t len = 0;
+
+    SKIP_SPACES;
+    CHECK_OVERFLOW
+
+    while(((*p) < end) && isdigit(*(*p)) && (len < 16)) {
+        buf[len++] = *((*p)++);
+    }
+
+    CHECK_OVERFLOW
+    if(len >= 16) {
+        return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
+    }
+
+    SKIP_SPACES;
+    CHECK_OVERFLOW
+
+    *ind = atoi((char*) buf);
+
+    return 0;
+}
+
+
+static int x509_get_dice_cmw(unsigned char **p,
+                             const unsigned char *end,
+                             mbedtls_x509_buf *dice_cmw_json) 
+{
+    unsigned char value[CMW_MAX_SIZE] = {0};
+    size_t len = 0;
+    int ret = 0;
+
+    switch((*p)[0]) {
+        case CMW_JSON_RECORD:
+            (*p)++;
+            break;
+        default:
+            return MBEDTLS_ERR_X509_INVALID_EXTENSIONS;
+            break;
+    }
+
+    SKIP_SPACES;
+    CHECK_OVERFLOW
+
+    CHECK_CHAR('[');
+
+    len = CMW_MAX_SIZE;
+    ret = x509_get_dice_cmw_string(p, end, value, &len);
+    if(ret) {
+        return ret;
+    }
+
+    if(strcmp(CMW_SEQUENCE_TYPE_JSON, (char*) value) || len != (sizeof(CMW_SEQUENCE_TYPE_JSON)-1)) {
+        return MBEDTLS_ERR_X509_INVALID_EXTENSIONS;
+    }
+
+    CHECK_CHAR(',');
+
+    len = CMW_MAX_SIZE;
+    ret = x509_get_dice_cmw_string(p, end, value, &len);
+    if(ret) {
+        return ret;
+    }
+
+    dice_cmw_json->p = (unsigned char *) malloc(len*sizeof(unsigned char));
+    if(dice_cmw_json->p == NULL) {
+        return MBEDTLS_ERR_ASN1_ALLOC_FAILED;
+    }
+
+    memcpy(dice_cmw_json->p, value, len);
+
+    CHECK_CHAR(',');
+
+    len = CMW_MAX_SIZE;
+    ret = x509_get_dice_cmw_int(p, end, &(dice_cmw_json->tag));
+    if(ret) {
+        return ret;
+    }
+
+    CHECK_CHAR(']');
+
+    return 0;
+}
+
+int mbedtls_x509_get_dice_cmw(unsigned char **p,
+                              const unsigned char *end,
+                              mbedtls_x509_buf *dice_cmw_json) 
+{
+    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+    size_t len;
+
+    /* Get main sequence tag */
+    if ((ret = mbedtls_asn1_get_tag(p, end, &len,
+                                    MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE)) != 0) {
+        return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS, ret);
+    }
+
+    if (*p + len != end) {
+        return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS,
+                                 MBEDTLS_ERR_ASN1_LENGTH_MISMATCH);
+    }
+
+    if ((ret = mbedtls_asn1_get_tag(p, end, &len,
+                                    MBEDTLS_ASN1_OCTET_STRING)) != 0) {
+        return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS, ret);
+    }
+
+    if (*p + len != end) {
+        return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS,
+                                 MBEDTLS_ERR_ASN1_LENGTH_MISMATCH);
+    }
+
+    return x509_get_dice_cmw(p, end, dice_cmw_json);
 }
 
 int mbedtls_x509_parse_subject_alt_name(const mbedtls_x509_buf *san_buf,

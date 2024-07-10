@@ -51,6 +51,7 @@
 #define MBEDTLS_OID_X509_EXT_FRESHEST_CRL                (1 << 14)
 #define MBEDTLS_OID_X509_EXT_NS_CERT_TYPE                (1 << 16)
 #define MBEDTLS_OID_X509_EXT_DICE_TCBINFO                (1 << 17)
+#define MBEDTLS_OID_X509_EXT_DICE_CMW                    (1 << 18)
 
 /*
  * Maximum number of OID components allowed
@@ -171,6 +172,7 @@
 #define MBEDTLS_OID_TCG                        "\x67\x81\x05"                  /**< tcg OBJECT IDENTIFIER ::= {2 23 133} */                  
 #define MBEDTLS_OID_TCG_DICE                   MBEDTLS_OID_TCG "\x05\x04"      /**< tcg-dice OBJECT IDENTIFIER ::= { tcg platformClass(5) 4 } */
 #define MBEDTLS_OID_TCG_DICE_TCBINFO           MBEDTLS_OID_TCG_DICE "\x01"     /**< tcg-dice-TcbInfo OBJECT IDENTIFIER ::= {tcg-dice 1} */
+#define MBEDTLS_OID_TCG_DICE_CMW               MBEDTLS_OID_TCG_DICE "\x09"     /**< tcg-dice-conceptual-message-wrapper OBJECT IDENTIFIER ::= {tcg-dice 9} */
 
 /*
  * Certificate policies
