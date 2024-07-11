@@ -136,7 +136,7 @@ static int x509write_csr_write_dice_cmw(unsigned char* buf, size_t buf_size, siz
         return MBEDTLS_ERR_ASN1_BUF_TOO_SMALL;
     }
 
-    *olen = sprintf((char*) buf, CMW_SEQUENCE_STRUCTURE, (unsigned int) CMW_JSON_RECORD, CMW_SEQUENCE_TYPE_JSON, dice_cmw_json.p, (unsigned int) dice_cmw_json.tag);
+    *olen = sprintf((char*) buf, CMW_SEQUENCE_STRUCTURE, CMW_SEQUENCE_TYPE_JSON, dice_cmw_json.p, (unsigned int) dice_cmw_json.tag);
 
     return 0;
 }
@@ -280,7 +280,9 @@ static int x509write_csr_der_internal(mbedtls_x509write_csr *ctx,
         return ret;
     }
 
-    if (mbedtls_pk_can_do(ctx->key, MBEDTLS_PK_RSA)) {
+    if (mbedtls_pk_can_do(ctx->key, MBEDTLS_PK_ED25519)) {
+        pk_alg = MBEDTLS_PK_ED25519;
+    } else if (mbedtls_pk_can_do(ctx->key, MBEDTLS_PK_RSA)) {
         pk_alg = MBEDTLS_PK_RSA;
     } else if (mbedtls_pk_can_do(ctx->key, MBEDTLS_PK_ECDSA)) {
         pk_alg = MBEDTLS_PK_ECDSA;

@@ -71,7 +71,7 @@ mbedtls_x509_csr;
 #define CMW_JSON_RECORD                 '\x5b'
 #define CMW_SEQUENCE_TYPE_JSON          "application/spirs.mbedtls.dice.patch1" 
 
-#define CMW_SEQUENCE_STRUCTURE          "%u[\"%s\", \"%s\", %u]"
+#define CMW_SEQUENCE_STRUCTURE          "[\"%s\", \"%s\", %u]"
 
 /**
  * Container for writing a CSR

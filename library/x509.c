@@ -1592,15 +1592,11 @@ static int x509_get_dice_cmw(unsigned char **p,
 
     switch((*p)[0]) {
         case CMW_JSON_RECORD:
-            (*p)++;
             break;
         default:
             return MBEDTLS_ERR_X509_INVALID_EXTENSIONS;
             break;
     }
-
-    SKIP_SPACES;
-    CHECK_OVERFLOW
 
     CHECK_CHAR('[');
 
@@ -1614,6 +1610,8 @@ static int x509_get_dice_cmw(unsigned char **p,
         return MBEDTLS_ERR_X509_INVALID_EXTENSIONS;
     }
 
+    memset(value, '\x00', len);
+
     CHECK_CHAR(',');
 
     len = CMW_MAX_SIZE;
@@ -1622,12 +1620,15 @@ static int x509_get_dice_cmw(unsigned char **p,
         return ret;
     }
 
-    dice_cmw_json->p = (unsigned char *) malloc(len*sizeof(unsigned char));
+    dice_cmw_json->p = (unsigned char *) malloc((len+1)*sizeof(unsigned char));
     if(dice_cmw_json->p == NULL) {
         return MBEDTLS_ERR_ASN1_ALLOC_FAILED;
     }
 
     memcpy(dice_cmw_json->p, value, len);
+    dice_cmw_json->len = len;
+
+    memset(value, '\x00', len);
 
     CHECK_CHAR(',');
 
