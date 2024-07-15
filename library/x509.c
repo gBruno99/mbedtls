@@ -74,6 +74,20 @@
     if(*((*p)++) != c) {                                \
         return MBEDTLS_ERR_X509_INVALID_EXTENSIONS;     \
     }                                                   
+
+int std_verify_dice_tcb_info(const mbedtls_x509_name *id, const dice_tcbInfo *dice_tcb_info) {
+    (void) id;
+    (void) dice_tcb_info;
+    return 0;
+}
+
+int (*verify_dice_tcb_info)(const mbedtls_x509_name *id, const dice_tcbInfo *dice_tcb_info) = STD_VERIFY_DICE_TCB_INFO;
+
+int mbedtls_platform_set_verify_dice_tcb_info(int (*verify_func)(const mbedtls_x509_name *id, const dice_tcbInfo *dice_tcb_info)) {
+    verify_dice_tcb_info = verify_func;
+    return 0;
+}
+
 /*
  *  CertificateSerialNumber  ::=  INTEGER
  */

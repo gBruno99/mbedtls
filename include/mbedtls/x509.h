@@ -20,6 +20,8 @@
 #include "mbedtls/rsa.h"
 #endif
 
+#include "mbedtls/dice_tcbinfo.h"
+
 /**
  * \addtogroup x509_module
  * \{
@@ -307,6 +309,15 @@ typedef struct mbedtls_x509_san_list {
     struct mbedtls_x509_san_list *next;
 }
 mbedtls_x509_san_list;
+
+int std_verify_dice_tcb_info(const mbedtls_x509_name *id, const dice_tcbInfo *dice_tcb_info);
+
+#define STD_VERIFY_DICE_TCB_INFO std_verify_dice_tcb_info
+
+// Functions to wrap and set the function to verify DiceTcbInfo extension
+extern int (*verify_dice_tcb_info)(const mbedtls_x509_name *id, const dice_tcbInfo *dice_tcb_info);
+
+int mbedtls_platform_set_verify_dice_tcb_info(int (*verify_func)(const mbedtls_x509_name *id, const dice_tcbInfo *dice_tcb_info));
 
 /** \} name Structures for parsing X.509 certificates, CRLs and CSRs */
 /** \} addtogroup x509_module */

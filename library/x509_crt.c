@@ -2620,6 +2620,10 @@ static int x509_crt_verify_chain(
             return 0;
         }
 
+        if((child->sig_pk == MBEDTLS_PK_ED25519) && verify_dice_tcb_info(&child->subject, &child->dice_tcb_info)) {
+            *flags |= MBEDTLS_X509_BADCERT_OTHER;
+        }
+
 #if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
 find_parent:
 #endif
