@@ -24,7 +24,7 @@ extern "C" {
  * \{ */
 
 /**
- * \name Structures and functions for parsing CRLs
+ * \name Structures and functions for parsing and writing CRLs
  * \{
  */
 
@@ -91,6 +91,41 @@ typedef struct mbedtls_x509_crl {
     struct mbedtls_x509_crl *next;
 }
 mbedtls_x509_crl;
+
+#define MBEDTLS_X509_CRL_VERSION_1  0
+#define MBEDTLS_X509_CRL_VERSION_2  1
+
+/**
+ * Container for writing an entry of the CRL
+ */
+typedef struct mbedtls_x509write_crl_entry {
+    unsigned char MBEDTLS_PRIVATE(serial)[MBEDTLS_X509_RFC5280_MAX_SERIAL_LEN];
+    size_t MBEDTLS_PRIVATE(serial_len);
+
+    char MBEDTLS_PRIVATE(rev_date)[MBEDTLS_X509_RFC5280_UTC_TIME_LEN + 1];
+
+    mbedtls_asn1_named_data *MBEDTLS_PRIVATE(entry_extensions);
+}
+mbedtls_x509write_crl_entry;
+
+/**
+ * Container for writing a CRL
+ */
+typedef struct mbedtls_x509write_crl {
+    int MBEDTLS_PRIVATE(version);
+
+    mbedtls_pk_context *MBEDTLS_PRIVATE(issuer_key);
+    mbedtls_md_type_t MBEDTLS_PRIVATE(md_alg);
+
+    mbedtls_asn1_named_data *MBEDTLS_PRIVATE(issuer);
+
+    char MBEDTLS_PRIVATE(this_update)[MBEDTLS_X509_RFC5280_UTC_TIME_LEN + 1];
+    char MBEDTLS_PRIVATE(next_update)[MBEDTLS_X509_RFC5280_UTC_TIME_LEN + 1];
+
+    mbedtls_asn1_named_data *MBEDTLS_PRIVATE(crl_extensions);
+    mbedtls_x509_sequence MBEDTLS_PRIVATE(revoked_crts);
+}
+mbedtls_x509write_crl;
 
 /**
  * \brief          Parse a DER-encoded CRL and append it to the chained list
@@ -174,7 +209,57 @@ void mbedtls_x509_crl_init(mbedtls_x509_crl *crl);
  */
 void mbedtls_x509_crl_free(mbedtls_x509_crl *crl);
 
-/** \} name Structures and functions for parsing CRLs */
+// CRL ENTRY
+void mbedtls_x509write_crl_entry_init(mbedtls_x509write_crl_entry *clx_entry);
+
+void mbedtls_x509write_crl_entry_free(mbedtls_x509write_crl_entry *clx_entry);
+
+#if defined(MBEDTLS_BIGNUM_C) && !defined(MBEDTLS_DEPRECATED_REMOVED)
+int mbedtls_x509write_crl_entry_set_serial(mbedtls_x509write_crl_entry *clx_entry,
+                                           const mbedtls_mpi *serial);
+#endif // MBEDTLS_BIGNUM_C && !MBEDTLS_DEPRECATED_REMOVED
+
+int mbedtls_x509write_crl_entry_set_serial_raw(mbedtls_x509write_crl_entry *clx_entry,
+                                         unsigned char *serial, size_t serial_len);
+
+int mbedtls_x509write_crl_entry_set_revocation(mbedtls_x509write_crl_entry *clx_entry, 
+                                               const char *rev_date);
+
+int mbedtls_x509write_crl_entry_set_extension(mbedtls_x509write_crl_entry *clx_entry,
+                                              const char *oid, size_t oid_len,
+                                              int critical,
+                                              const unsigned char *val, size_t val_len);
+
+// CRL
+void mbedtls_x509write_crl_init(mbedtls_x509write_crl *clx);
+
+void mbedtls_x509write_crl_free(mbedtls_x509write_crl *clx);
+
+void mbedtls_x509write_crl_set_version(mbedtls_x509write_crl *clx, int version);
+
+void mbedtls_x509write_crl_set_md_alg(mbedtls_x509write_crl *clx, mbedtls_md_type_t md_alg);
+
+void mbedtls_x509write_crl_set_issuer_key(mbedtls_x509write_crl *clx, mbedtls_pk_context *key);
+
+int mbedtls_x509write_crl_set_issuer_name(mbedtls_x509write_crl *clx, const char *issuer_name);
+
+int mbedtls_x509write_crl_set_validity(mbedtls_x509write_crl *clx, 
+                                       const char *this_update,
+                                       const char *next_update);
+
+int mbedtls_x509write_crl_set_extension(mbedtls_x509write_crl *clx,
+                                        const char *oid, size_t oid_len,
+                                        int critical,
+                                        const unsigned char *val, size_t val_len);
+
+int mbedtls_x509write_crl_set_revoked_crt(mbedtls_x509write_crl *clx,
+                                          mbedtls_x509write_crl_entry *clx_entry);
+
+int mbedtls_x509write_crl_der(mbedtls_x509write_crl *clx, unsigned char *buf, size_t size,
+                              int (*f_rng)(void *, unsigned char *, size_t),
+                              void *p_rng);
+
+/** \} name Structures and functions for parsing and writing CRLs */
 /** \} addtogroup x509_module */
 
 #ifdef __cplusplus

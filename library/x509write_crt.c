@@ -446,7 +446,7 @@ int mbedtls_x509write_crt_set_dice_tcbInfo(mbedtls_x509write_cert *ctx,
                                                1, buf + dim - len, len);
 }
 
-static int x509_write_time(unsigned char **p, unsigned char *start,
+int x509_write_time(unsigned char **p, unsigned char *start,
                            const char *t, size_t size)
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;

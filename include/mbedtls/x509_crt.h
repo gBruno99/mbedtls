@@ -140,9 +140,6 @@ mbedtls_x509_crt_profile;
 #define MBEDTLS_X509_CRT_VERSION_2              1
 #define MBEDTLS_X509_CRT_VERSION_3              2
 
-#define MBEDTLS_X509_RFC5280_MAX_SERIAL_LEN 20
-#define MBEDTLS_X509_RFC5280_UTC_TIME_LEN   15
-
 #if !defined(MBEDTLS_X509_MAX_FILE_PATH_LEN)
 #define MBEDTLS_X509_MAX_FILE_PATH_LEN 512
 #endif
@@ -1173,6 +1170,9 @@ int mbedtls_x509write_crt_set_ns_cert_type(mbedtls_x509write_cert *ctx,
  */
 int mbedtls_x509write_crt_set_dice_tcbInfo(mbedtls_x509write_cert *ctx,
                                            dice_tcbInfo info_struct, int dim, unsigned char buf[], size_t buf_size);
+
+int x509_write_time(unsigned char **p, unsigned char *start,
+                           const char *t, size_t size);
 
 /**
  * \brief           Free the contents of a CRT write context
