@@ -22,9 +22,6 @@
 
 #include "mbedtls/dice_tcbinfo.h"
 
-#define debug_print             \
-    printf("%s,%d\n", __func__, __LINE__);
-
 /**
  * \addtogroup x509_module
  * \{
