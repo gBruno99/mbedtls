@@ -505,12 +505,12 @@ int mbedtls_x509write_crt_der(mbedtls_x509write_cert *ctx,
 
     /* There's no direct way of extracting a signature algorithm
      * (represented as an element of mbedtls_pk_type_t) from a PK instance. */
-    if (mbedtls_pk_can_do(ctx->issuer_key, MBEDTLS_PK_RSA)) {
+    if (mbedtls_pk_can_do(ctx->issuer_key, MBEDTLS_PK_ED25519)) {
+        pk_alg = MBEDTLS_PK_ED25519;
+    } else if (mbedtls_pk_can_do(ctx->issuer_key, MBEDTLS_PK_RSA)) {
         pk_alg = MBEDTLS_PK_RSA;
     } else if (mbedtls_pk_can_do(ctx->issuer_key, MBEDTLS_PK_ECDSA)) {
         pk_alg = MBEDTLS_PK_ECDSA;
-    } else if (mbedtls_pk_can_do(ctx->issuer_key, MBEDTLS_PK_ED25519)) {
-        pk_alg = MBEDTLS_PK_ED25519;
     } else {
         return MBEDTLS_ERR_X509_INVALID_ALG;
     }
