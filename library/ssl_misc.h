@@ -2417,6 +2417,8 @@ static inline int mbedtls_ssl_tls13_sig_alg_for_cert_verify_is_supported(
             break;
 #endif /* PSA_WANT_ALG_SHA_512 */
 #endif /* MBEDTLS_PKCS1_V21 */
+        case MBEDTLS_TLS1_3_SIG_ED25519:
+            break;
         default:
             return 0;
     }
@@ -2502,6 +2504,10 @@ static inline int mbedtls_ssl_get_pk_type_and_md_alg_from_sig_alg(
             break;
 #endif /* MBEDTLS_MD_CAN_SHA512 */
 #endif /* MBEDTLS_PKCS1_V21 */
+        case MBEDTLS_TLS1_3_SIG_ED25519:
+            *md_alg = MBEDTLS_MD_SHA512;
+            *pk_type = MBEDTLS_PK_ED25519;
+            break;
         default:
             return MBEDTLS_ERR_SSL_FEATURE_UNAVAILABLE;
     }

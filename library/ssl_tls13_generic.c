@@ -963,7 +963,7 @@ int mbedtls_ssl_tls13_check_sig_alg_cert_key_match(uint16_t sig_alg,
             switch (key_size) {
                 case 256:
                     return
-                        sig_alg == MBEDTLS_TLS1_3_SIG_ECDSA_SECP256R1_SHA256;
+                        sig_alg == MBEDTLS_TLS1_3_SIG_ECDSA_SECP256R1_SHA256 || sig_alg == MBEDTLS_TLS1_3_SIG_ED25519;
 
                 case 384:
                     return
