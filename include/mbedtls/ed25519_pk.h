@@ -1,6 +1,10 @@
 #ifndef MBEDTLS_ED25519_H
 #define MBEDTLS_ED25519_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stddef.h>
 
 #include "mbedtls/private_access.h"
@@ -34,5 +38,9 @@ int pk_set_ed25519pubkey(unsigned char **p, mbedtls_ed25519_context *ed25519);
 int pk_set_ed25519privkey(unsigned char **p, mbedtls_ed25519_context *ed25519);
 int pk_write_ed25519_pubkey(unsigned char **p, unsigned char *start, mbedtls_ed25519_context *ed25519);
 int pk_parse_ed25519_pubkey(unsigned char **p, mbedtls_ed25519_context *ed25519);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -1,6 +1,10 @@
 #ifndef DICE_TCBINFO_H
 #define DICE_TCBINFO_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct measure {
     unsigned char OID_algo[10];
     int oid_len;
@@ -38,5 +42,9 @@ void set_dice_tcbInfo_measure(dice_tcbInfo *tcbInfo, measure m);
 int setting_tcbInfo(dice_tcbInfo *tcbInfo, unsigned char vendor[], int l_ven, unsigned char model[], int l_m, unsigned char version[], int l_ver,
                     int svn, int layer, int index, unsigned char flags[], int l_f, unsigned char vendor_info[], int l_vf, unsigned char type[], int l_t,
                     measure measures[], int l_mea);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
